@@ -284,6 +284,19 @@ function renderTasks(){
 
     div.innerHTML=`
       <span>${t.text}</span>
+      <div>
+        <input type="checkbox"
+          ${t.done?"checked":""}
+          onchange="toggle(${i})">
+        <button onclick="deleteTask(${i})">削除</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+    div.innerHTML=`
+      <span>${t.text}</span>
       <input type="checkbox"
         ${t.done?"checked":""}
         onchange="toggle(${i})">
@@ -292,7 +305,53 @@ function renderTasks(){
   });
 }
 
+function deleteTask(i){
+
+  if(currentTab==="daily"){
+
+    if(selectedDate < todayStr){
+      alert("過去のデイリーは削除できません");
+      return;
+    }
+
+    let text=data[selectedDate].daily[i].text;
+
+    let choice=prompt(
+      "削除方法を選んでください:\n"+
+      "1 → この日だけ削除\n"+
+      "2 → この日以降すべて削除\n"+
+      "3 → キャンセル"
+    );
+
+    if(choice==="1"){
+      data[selectedDate].daily.splice(i,1);
+    }
+    else if(choice==="2"){
+      masterDaily = masterDaily.filter(t=>t.text!==text);
+
+      Object.keys(data).forEach(date=>{
+        if(date >= selectedDate){
+          data[date].daily =
+            data[date].daily.filter(t=>t.text!==text);
+        }
+      });
+    }
+    else{
+      return;
+    }
+
+  }else{
+    data[selectedDate].non.splice(i,1);
+  }
+
+  save();
+  renderTasks();
+  renderCalendar();
+  updateRate();
+}
+
 renderCalendar();
 </script>
 </body>
 </html>
+
