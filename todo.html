@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Pastel Todo</title>
+
+<style>
+body {
+  font-family:sans-serif;
+  margin:0;
+  padding:15px;
+  background:#fff6fb;
+}
+
+h1 {
+  text-align:center;
+  color:#7a6c9d;
+}
+
+.header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+button {
+  padding:6px 10px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  background:#e6d6ff;
+}
+
+.calendar {
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:6px;
+}
+
+.day {
+  background:#f3ecff;
+  padding:8px;
+  min-height:90px;
+  border-radius:14px;
+  font-size:13px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  align-items:center;
+  transition:0.2s;
+}
+
+.day:hover {
+  background:#e5d8ff;
+}
+
+.today {
+  background:#bde0fe;
+  font-weight:bold;
+}
+
+.future { opacity:0.4; }
+
+.rate {
+  font-size:26px;
+}
+
+.weekday {
+  font-size:12px;
+  text-align:center;
+  font-weight:bold;
+  color:#8b80b6;
+}
+
+.tabs {
+  margin:10px 0;
+  display:flex;
+  gap:10px;
+}
+
+.tabs button {
+  flex:1;
+  background:#ddd;
+}
+
+.activeTab {
+  background:#ffcad4 !important;
+}
+
+.task {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:6px;
+  background:#ffffff;
+  margin-top:6px;
+  border-radius:12px;
+  cursor:grab;
+}
+
+.done {
+  text-decoration:line-through;
+  opacity:0.5;
+}
+
+.deleteBtn {
+  margin-left:6px;
+  background:#ffafcc;
+  border:none;
+  border-radius:8px;
+  padding:2px 6px;
+}
+
+.modalOverlay {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.3);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+
+.modal {
+  background:#ffffff;
+  width:90%;
+  max-width:400px;
+  max-height:80vh;
+  overflow:auto;
+  padding:18px;
+  border-radius:20px;
+}
+</style>
+</head>
+<body>
+
+<h1>🌸 My Pastel Todo 🌸</h1>
+
+<div class="header">
+<button onclick="changeMonth(-1)">←</button>
+<div id="monthLabel"></div>
+<button onclick="changeMonth(1)">→</button>
+</div>
+
+<div class="calendar" id="calendar"></div>
+
+<div class="modalOverlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+
+    <h2 id="modalDate"></h2>
+    <div id="rateDisplay" style="margin-bottom:10px;"></div>
+
+    <div class="tabs">
+      <button id="dailyTab" onclick="switchTab('daily')">デイリー</button>
+      <button id="nonTab" onclick="switchTab('non')">非デイリー</button>
+    </div>
+
+    <div>
+      <input type="text" id="taskInput" placeholder="タスクを入力">
+      <button onclick="addTask()">追加</button>
+    </div>
+
+    <div id="taskList"></div>
+  </div>
+</div>
+
+<script>
+function formatDateLocal(d){
+ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+let todayStr=formatDateLocal(new Date());
+let viewDate=new Date();
+let selectedDate=null;
+let currentTab="daily";
+let dragIndex=null;
+
+let data=JSON.parse(localStorage.getItem("todoData")||"{}");
+let masterDaily=JSON.parse(localStorage.getItem("masterDaily")||"[]");
+
+function save(){
+ localStorage.setItem("todoData",JSON.stringify(data));
+ localStorage.setItem("masterDaily",JSON.stringify(masterDaily));
+}
+
+function ensureDate(date){
+ if(!data[date]){
+  data[date]={daily:masterDaily.map(t=>({...t})),non:[]};
+ }
+}
+
+function changeMonth(offset){
+ let temp=new Date(viewDate);
+ temp.setMonth(temp.getMonth()+offset);
+ viewDate=temp;
+ generateCalendar();
+}
+
+function generateCalendar(){
+ const cal=document.getElementById("calendar");
+ cal.innerHTML="";
+ let y=viewDate.getFullYear();
+ let m=viewDate.getMonth();
+ document.getElementById("monthLabel").innerText=y+"年 "+(m+1)+"月";
+
+ const weekdays=["日","月","火","水","木","金","土"];
+ weekdays.forEach(w=>{
+  let div=document.createElement("div");
+  div.className="weekday";
+  div.innerText=w;
+  cal.appendChild(div);
+ });
+
+ let firstDay=new Date(y,m,1).getDay();
+ let days=new Date(y,m+1,0).getDate();
+
+ for(let i=0;i<firstDay;i++) cal.appendChild(document.createElement("div"));
+
+ for(let i=1;i<=days;i++){
+  let d=new Date(y,m,i);
+  let date=formatDateLocal(d);
+  ensureDate(date);
+
+  let div=document.createElement("div");
+  div.className="day";
+
+  if(date===todayStr) div.classList.add("today");
+  if(date>todayStr) div.classList.add("future");
+
+  let rate="";
+  if(date<=todayStr) rate=getRate(date).mark;
+
+  div.innerHTML=`<div>${i}</div><div class="rate">${rate}</div>`;
+  div.onclick=()=>openModal(date);
+  cal.appendChild(div);
+ }
+}
+
+function getRate(date){
+ let tasks=[...data[date].daily,...data[date].non];
+ if(tasks.length===0) return {percent:0,mark:""};
+ let done=tasks.filter(t=>t.done).length;
+ let p=Math.round(done/tasks.length*100);
+ let mark="";
+ if(p===100) mark="🌸";
+ else if(p>=80) mark="◎";
+ else if(p>=60) mark="○";
+ else if(p>=30) mark="△";
+ else mark="✕";
+ return {percent:p,mark};
+}
+
+function openModal(date){
+ selectedDate=date;
+ document.getElementById("modalDate").innerText=date;
+ document.getElementById("modalOverlay").style.display="flex";
+ switchTab("daily");
+ updateProgress();
+}
+
+function closeModal(){
+ document.getElementById("modalOverlay").style.display="none";
+}
+
+function switchTab(tab){
+ currentTab=tab;
+ document.getElementById("dailyTab").classList.remove("activeTab");
+ document.getElementById("nonTab").classList.remove("activeTab");
+ document.getElementById(tab+"Tab").classList.add("activeTab");
+ renderTasks();
+ updateProgress();
+}
+
+function updateProgress(){
+ let r=getRate(selectedDate);
+ document.getElementById("rateDisplay").innerText =
+ `${r.mark}：達成率 ${r.percent}%`;
+}
+
+/* 🔥 3択削除 */
+function deleteTask(i){
+ if(currentTab==="daily"){
+   if(selectedDate < todayStr){
+     alert("過去のデイリーは削除できません");
+     return;
+   }
+
+   let text=data[selectedDate].daily[i].text;
+
+   let choice=prompt(
+     "削除方法を選んでください:\n1 → この日だけ削除\n2 → この日以降すべて削除\n3 → キャンセル"
+   );
+
+   if(choice==="1"){
+     data[selectedDate].daily.splice(i,1);
+   }
+   else if(choice==="2"){
+     masterDaily=masterDaily.filter(t=>t.text!==text);
+     Object.keys(data).forEach(date=>{
+       if(date>=selectedDate){
+         data[date].daily=data[date].daily.filter(t=>t.text!==text);
+       }
+     });
+   }
+   else{
+     return;
+   }
+ }
+ else{
+   data[selectedDate].non.splice(i,1);
+ }
+
+ save();
+ renderTasks();
+ generateCalendar();
+ updateProgress();
+}
+
+function toggleTask(i){
+ let tasks=data[selectedDate][currentTab];
+ tasks[i].done=!tasks[i].done;
+ tasks.sort((a,b)=>a.done-b.done);
+ save();
+ renderTasks();
+ generateCalendar();
+ updateProgress();
+}
+
+function renderTasks(){
+ ensureDate(selectedDate);
+ let list=document.getElementById("taskList");
+ list.innerHTML="";
+ let tasks=data[selectedDate][currentTab];
+
+ tasks.forEach((t,i)=>{
+  let div=document.createElement("div");
+  div.className="task";
+  if(t.done) div.classList.add("done");
+
+  div.innerHTML=`
+  <span>${t.text}</span>
+  <div>
+    <input type="checkbox" ${t.done?"checked":""}
+    onchange="toggleTask(${i})">
+    <button class="deleteBtn" onclick="deleteTask(${i})">削除</button>
+  </div>`;
+  list.appendChild(div);
+ });
+}
+
+generateCalendar();
+</script>
+</body>
+</html>
