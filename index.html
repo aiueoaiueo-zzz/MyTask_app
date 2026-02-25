@@ -307,11 +307,15 @@ function addTask() {
     const id = createId();
     appData.masterDaily[id] = { id, text, createdAt: selectedDate };
     Object.keys(appData.calendar).forEach((date) => {
-      ensureDate(date);
-      const day = appData.calendar[date];
-      if (!day.dailyExcluded[id]) {
-        day.daily[id] = { id, text, done: false, type: "daily" };
-        day.dailyOrder.push(id);
+ensureDate(date);
+const day = appData.calendar[date];
+
+if (!day.dailyExcluded[id]) {
+  day.daily[id] = { id, text, done: false, type: "daily" };
+  if (!day.dailyOrder.includes(id)) {
+    day.dailyOrder.push(id);
+  }
+}
       }
     });
   } else {
