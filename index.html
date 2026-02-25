@@ -3,416 +3,468 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#000000">
-
 <title>To Do</title>
-
 <style>
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont;
-  background:#000;
-  color:#fff;
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+  background: #000;
+  color: #fff;
 }
-
-header{
-  text-align:center;
-  padding:16px;
-  font-size:22px;
-  font-weight:600;
-  background:#111;
+header {
+  text-align: center;
+  padding: 16px;
+  background: #1c1c1e;
 }
-
-header input{
-  background:transparent;
-  border:none;
-  color:#fff;
-  font-size:22px;
-  text-align:center;
-  width:200px;
+header input {
+  width: 240px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
 }
-
-.monthNav{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 16px;
-  font-size:16px;
+.monthNav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
 }
-
-.calendar{
-  padding:10px;
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:6px;
+.monthNav button, .small {
+  background: #2c2c2e;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 10px;
 }
-
-.weekday{
-  text-align:center;
-  font-size:12px;
-  color:#888;
+.monthNav button:disabled { opacity: 0.4; }
+#monthLabel { font-size: 18px; }
+.calendar {
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
 }
-
-.day{
-  background:#1c1c1e;
-  border-radius:14px;
-  min-height:80px;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  align-items:center;
-  padding:6px;
-  font-size:13px;
+.weekday {
+  text-align: center;
+  font-size: 12px;
+  color: #8e8e93;
 }
-
-.today{
-  border:2px solid #0a84ff;
+.day {
+  background: #1c1c1e;
+  border-radius: 14px;
+  min-height: 78px;
+  padding: 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
 }
-
-.future{
-  opacity:0.3;
+.today { border: 2px solid #0a84ff; }
+.future { opacity: 0.45; }
+.rate { font-size: 17px; }
+.fab {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  border: none;
+  font-size: 36px;
+  background: #0a84ff;
+  color: #fff;
 }
-
-.rate{
-  font-size:18px;
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.62);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
 }
-
-.fab{
-  position:fixed;
-  bottom:30px;
-  left:50%;
-  transform:translateX(-50%);
-  width:70px;
-  height:70px;
-  border-radius:50%;
-  background:#0a84ff;
-  color:#fff;
-  font-size:40px;
-  border:none;
+.modal {
+  width: min(460px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: #1c1c1e;
+  border-radius: 18px;
+  padding: 18px;
 }
-
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.6);
-  display:none;
-  justify-content:center;
-  align-items:center;
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 14px;
 }
-
-.modal{
-  background:#1c1c1e;
-  width:90%;
-  max-width:420px;
-  max-height:85vh;
-  overflow:auto;
-  border-radius:20px;
-  padding:20px;
+.tabs button {
+  flex: 1;
+  border: none;
+  border-radius: 12px;
+  padding: 10px;
+  color: #fff;
+  background: #2c2c2e;
 }
-
-.tabs{
-  display:flex;
-  gap:10px;
-  margin:10px 0;
+.activeTab { background: #0a84ff !important; }
+.task {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 12px;
+  background: #2c2c2e;
+  margin-bottom: 8px;
 }
-
-.tabs button{
-  flex:1;
-  background:#2c2c2e;
-  border:none;
-  padding:8px;
-  border-radius:10px;
-  color:#fff;
-}
-
-.activeTab{
-  background:#0a84ff !important;
-}
-
-.task{
-  display:flex;
-  justify-content:space-between;
-  padding:6px 0;
-  cursor:grab;
-}
-
-.done{
-  text-decoration:line-through;
-  opacity:0.4;
-}
-
-button.small{
-  background:#2c2c2e;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  padding:4px 6px;
+.task.done span { text-decoration: line-through; opacity: .45; }
+.taskActions { display: flex; gap: 6px; align-items: center; }
+.inputRow { display: flex; gap: 8px; margin-top: 10px; }
+.inputRow input {
+  flex: 1;
+  border: none;
+  border-radius: 12px;
+  background: #2c2c2e;
+  color: #fff;
+  padding: 10px;
 }
 </style>
 </head>
 <body>
-
-<header>
-<input id="appTitle" value="To Do">
-</header>
-
+<header><input id="appTitle" value="To Do"></header>
 <div class="monthNav">
-<button onclick="changeMonth(-1)">←</button>
-<div id="monthLabel"></div>
-<button onclick="changeMonth(1)">→</button>
+  <button id="prevBtn" onclick="changeMonth(-1)">←</button>
+  <div id="monthLabel"></div>
+  <button id="nextBtn" onclick="changeMonth(1)">→</button>
 </div>
-
 <div class="calendar" id="calendar"></div>
-
 <button class="fab" onclick="openModal()">＋</button>
-
 <div class="overlay" id="overlay" onclick="closeModal(event)">
-<div class="modal" onclick="event.stopPropagation()">
-
-<h3 id="modalDate"></h3>
-<div id="rateDisplay"></div>
-
-<div class="tabs">
-<button id="dailyTab" onclick="switchTab('daily')">デイリー</button>
-<button id="nonTab" onclick="switchTab('non')">非デイリー</button>
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3 id="modalDate"></h3>
+    <div id="rateDisplay"></div>
+    <div class="tabs">
+      <button id="dailyTab" onclick="switchTab('daily')">デイリー</button>
+      <button id="singleTab" onclick="switchTab('single')">非デイリー</button>
+    </div>
+    <div id="taskList"></div>
+    <div class="inputRow">
+      <input id="taskInput" placeholder="タスクを入力">
+      <button class="small" onclick="addTask()">追加</button>
+    </div>
+  </div>
 </div>
-
-<div id="taskList"></div>
-
-<input id="taskInput" placeholder="タスクを入力">
-<button class="small" onclick="addTask()">追加</button>
-
-</div>
-</div>
-
 <script>
-function formatLocal(d){
- return d.getFullYear()+"-"+
-  String(d.getMonth()+1).padStart(2,"0")+"-"+
-  String(d.getDate()).padStart(2,"0");
+const STORAGE_KEY = "todoApp_v2";
+
+function formatLocal(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function createId() {
+  if (crypto?.randomUUID) return crypto.randomUUID();
+  return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+}
+function emptyDateEntry() {
+  return { daily: {}, single: {}, dailyOrder: [], singleOrder: [], dailyExcluded: {} };
 }
 
-let today=new Date();
-let todayStr=formatLocal(today);
-let viewDate=new Date(today.getFullYear(),today.getMonth(),1);
-let selectedDate=todayStr;
-let currentTab="daily";
-let dragIndex=null;
+const today = new Date();
+const todayStr = formatLocal(today);
+const minMonth = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+const maxMonth = new Date(today.getFullYear(), today.getMonth() + 3, 1);
+let viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+let selectedDate = todayStr;
+let currentTab = "daily";
+let dragId = null;
 
-let data=JSON.parse(localStorage.getItem("todoData")||"{}");
-let masterDaily=JSON.parse(localStorage.getItem("masterDaily")||"[]");
+const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+let appData = {
+  appTitle: raw.appTitle || "To Do",
+  masterDaily: raw.masterDaily && typeof raw.masterDaily === "object" ? raw.masterDaily : {},
+  calendar: raw.calendar && typeof raw.calendar === "object" ? raw.calendar : {}
+};
 
-function save(){
- localStorage.setItem("todoData",JSON.stringify(data));
- localStorage.setItem("masterDaily",JSON.stringify(masterDaily));
- localStorage.setItem("appTitle",
- document.getElementById("appTitle").value);
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
 }
 
-document.getElementById("appTitle").value=
- localStorage.getItem("appTitle")||"To Do";
+function ensureDate(dateStr) {
+  if (!appData.calendar[dateStr]) appData.calendar[dateStr] = emptyDateEntry();
+  const day = appData.calendar[dateStr];
+  day.daily = day.daily || {};
+  day.single = day.single || {};
+  day.dailyOrder = Array.isArray(day.dailyOrder) ? day.dailyOrder : Object.keys(day.daily);
+  day.singleOrder = Array.isArray(day.singleOrder) ? day.singleOrder : Object.keys(day.single);
+  day.dailyExcluded = day.dailyExcluded || {};
 
-document.getElementById("appTitle").onchange=save;
-
-function ensure(date){
- if(!data[date]){
-  data[date]={daily:masterDaily.map(t=>({...t})),non:[]};
- }
-}
-
-function changeMonth(offset){
- let temp=new Date(viewDate);
- temp.setMonth(temp.getMonth()+offset);
- viewDate=new Date(temp.getFullYear(),temp.getMonth(),1);
- renderCalendar();
-}
-
-function renderCalendar(){
- const cal=document.getElementById("calendar");
- cal.innerHTML="";
-
- let y=viewDate.getFullYear();
- let m=viewDate.getMonth();
- document.getElementById("monthLabel").innerText=
- y+"年 "+(m+1)+"月";
-
- const weekdays=["日","月","火","水","木","金","土"];
- weekdays.forEach(w=>{
-  let div=document.createElement("div");
-  div.className="weekday";
-  div.innerText=w;
-  cal.appendChild(div);
- });
-
- let firstDay=new Date(y,m,1).getDay();
- let days=new Date(y,m+1,0).getDate();
-
- for(let i=0;i<firstDay;i++){
-  cal.appendChild(document.createElement("div"));
- }
-
- for(let i=1;i<=days;i++){
-  let d=new Date(y,m,i);
-  let date=formatLocal(d);
-  ensure(date);
-
-  let div=document.createElement("div");
-  div.className="day";
-
-  if(date===todayStr) div.classList.add("today");
-  if(date>todayStr) div.classList.add("future");
-
-  let mark="";
-  if(date<=todayStr){
-   let r=getRate(date);
-   mark=r.mark;
-  }
-
-  div.innerHTML=`<div>${i}</div><div class="rate">${mark}</div>`;
-  div.onclick=()=>{selectedDate=date;openModal();};
-  cal.appendChild(div);
- }
-}
-
-function getRate(date){
- let tasks=[...data[date].daily,...data[date].non];
- if(tasks.length===0) return {percent:0,mark:""};
- let done=tasks.filter(t=>t.done).length;
- let p=Math.round(done/tasks.length*100);
- let mark=p===100?"✓":p>=60?"•":"×";
- return {percent:p,mark};
-}
-
-function openModal(){
- ensure(selectedDate);
- document.getElementById("modalDate").innerText=selectedDate;
- document.getElementById("overlay").style.display="flex";
- switchTab("daily");
- updateRate();
-}
-
-function closeModal(){
- document.getElementById("overlay").style.display="none";
-}
-
-function switchTab(tab){
- currentTab=tab;
- document.getElementById("dailyTab").classList.remove("activeTab");
- document.getElementById("nonTab").classList.remove("activeTab");
- document.getElementById(tab+"Tab").classList.add("activeTab");
- renderTasks();
-}
-
-function updateRate(){
- let r=getRate(selectedDate);
- document.getElementById("rateDisplay").innerText=
- r.mark+"：達成率 "+r.percent+"%";
-}
-
-function addTask(){
- let input=document.getElementById("taskInput");
- if(!input.value) return;
-
- if(currentTab==="daily"){
-  masterDaily.push({text:input.value,done:false});
-  Object.keys(data).forEach(date=>{
-   data[date].daily.push({text:input.value,done:false});
-  });
- }else{
-  data[selectedDate].non.push({text:input.value,done:false});
- }
-
- input.value="";
- save();
- renderTasks();
- renderCalendar();
- updateRate();
-}
-
-function deleteTask(i){
- if(currentTab==="daily"){
-  if(selectedDate < todayStr){
-   alert("過去のデイリーは削除できません");
-   return;
-  }
-  let text=data[selectedDate].daily[i].text;
-
-  let choice=prompt(
-   "削除方法を選んでください:\n"+
-   "1 → この日だけ削除\n"+
-   "2 → この日以降すべて削除\n"+
-   "3 → キャンセル"
-  );
-
-  if(choice==="1"){
-   data[selectedDate].daily.splice(i,1);
-  }
-  else if(choice==="2"){
-   masterDaily=masterDaily.filter(t=>t.text!==text);
-   Object.keys(data).forEach(date=>{
-    if(date>=selectedDate){
-     data[date].daily=
-      data[date].daily.filter(t=>t.text!==text);
+  Object.values(appData.masterDaily).forEach((m) => {
+    if (!day.daily[m.id] && !day.dailyExcluded[m.id]) {
+      day.daily[m.id] = { id: m.id, text: m.text, done: false, type: "daily" };
+      day.dailyOrder.push(m.id);
     }
-   });
+  });
+
+  day.dailyOrder = day.dailyOrder.filter((id) => !!day.daily[id]);
+  day.singleOrder = day.singleOrder.filter((id) => !!day.single[id]);
+}
+
+function getTasks(dateStr, tab) {
+  ensureDate(dateStr);
+  const day = appData.calendar[dateStr];
+  const map = day[tab];
+  const order = day[tab + "Order"];
+  return order.map((id) => map[id]).filter(Boolean);
+}
+
+function getRate(dateStr) {
+  ensureDate(dateStr);
+  const day = appData.calendar[dateStr];
+  const all = [...Object.values(day.daily), ...Object.values(day.single)];
+  if (!all.length) return { percent: 0, mark: "" };
+  const done = all.filter((t) => t.done).length;
+  const percent = Math.round(done / all.length * 100);
+  const mark = percent === 100 ? "✓" : percent >= 60 ? "•" : "×";
+  return { percent, mark };
+}
+
+function changeMonth(offset) {
+  const d = new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1);
+  if (d < minMonth || d > maxMonth) return;
+  viewDate = d;
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const cal = document.getElementById("calendar");
+  cal.innerHTML = "";
+  const y = viewDate.getFullYear();
+  const m = viewDate.getMonth();
+  document.getElementById("monthLabel").innerText = `${y}年 ${m + 1}月`;
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+  weekdays.forEach((w) => {
+    const div = document.createElement("div");
+    div.className = "weekday";
+    div.innerText = w;
+    cal.appendChild(div);
+  });
+
+  document.getElementById("prevBtn").disabled = viewDate <= minMonth;
+  document.getElementById("nextBtn").disabled = viewDate >= maxMonth;
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const days = new Date(y, m + 1, 0).getDate();
+  for (let i = 0; i < firstDay; i++) cal.appendChild(document.createElement("div"));
+
+  for (let i = 1; i <= days; i++) {
+    const d = new Date(y, m, i);
+    const dateStr = formatLocal(d);
+    ensureDate(dateStr);
+    const div = document.createElement("div");
+    div.className = "day";
+    if (dateStr === todayStr) div.classList.add("today");
+    if (dateStr > todayStr) div.classList.add("future");
+    let mark = "";
+    if (dateStr <= todayStr) mark = getRate(dateStr).mark;
+    div.innerHTML = `<div>${i}</div><div class="rate">${mark}</div>`;
+    div.onclick = () => { selectedDate = dateStr; openModal(); };
+    cal.appendChild(div);
   }
-  else return;
- }
- else{
-  data[selectedDate].non.splice(i,1);
- }
-
- save();
- renderTasks();
- renderCalendar();
- updateRate();
 }
 
-function toggle(i){
- let tasks=data[selectedDate][currentTab];
- tasks[i].done=!tasks[i].done;
- tasks.sort((a,b)=>a.done-b.done);
- save();
- renderTasks();
- renderCalendar();
- updateRate();
+function openModal() {
+  ensureDate(selectedDate);
+  document.getElementById("modalDate").innerText = selectedDate;
+  document.getElementById("overlay").style.display = "flex";
+  switchTab(currentTab);
+  updateRate();
+}
+function closeModal() { document.getElementById("overlay").style.display = "none"; }
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById("dailyTab").classList.toggle("activeTab", tab === "daily");
+  document.getElementById("singleTab").classList.toggle("activeTab", tab === "single");
+  renderTasks();
+}
+function updateRate() {
+  const r = getRate(selectedDate);
+  document.getElementById("rateDisplay").innerText = `${r.mark}：達成率 ${r.percent}%`;
 }
 
-function renderTasks(){
- let list=document.getElementById("taskList");
- list.innerHTML="";
- let tasks=data[selectedDate][currentTab];
+function addTask() {
+  ensureDate(selectedDate);
+  const input = document.getElementById("taskInput");
+  const text = input.value.trim();
+  if (!text) return;
 
- tasks.forEach((t,i)=>{
-  let div=document.createElement("div");
-  div.className="task";
-  if(t.done) div.classList.add("done");
+  if (currentTab === "daily") {
+    const id = createId();
+    appData.masterDaily[id] = { id, text, createdAt: selectedDate };
+    Object.keys(appData.calendar).forEach((date) => {
+      ensureDate(date);
+      const day = appData.calendar[date];
+      if (!day.dailyExcluded[id]) {
+        day.daily[id] = { id, text, done: false, type: "daily" };
+        day.dailyOrder.push(id);
+      }
+    });
+  } else {
+    const id = createId();
+    const day = appData.calendar[selectedDate];
+    day.single[id] = { id, text, done: false, type: "single" };
+    day.singleOrder.push(id);
+  }
 
-  div.draggable=true;
-  div.ondragstart=()=>dragIndex=i;
-  div.ondragover=e=>e.preventDefault();
-  div.ondrop=()=>{
-   let temp=tasks[dragIndex];
-   tasks.splice(dragIndex,1);
-   tasks.splice(i,0,temp);
-   save();
-   renderTasks();
-  };
-
-  div.innerHTML=`
-   <span>${t.text}</span>
-   <div>
-    <input type="checkbox"
-     ${t.done?"checked":""}
-     onchange="toggle(${i})">
-    <button class="small"
-     onclick="deleteTask(${i})">削除</button>
-   </div>
-  `;
-  list.appendChild(div);
- });
+  input.value = "";
+  save();
+  renderTasks();
+  renderCalendar();
+  updateRate();
 }
+
+function editTask(id) {
+  ensureDate(selectedDate);
+  const day = appData.calendar[selectedDate];
+  if (currentTab === "single") {
+    const task = day.single[id];
+    const nextText = prompt("タスクを編集", task.text);
+    if (!nextText || !nextText.trim()) return;
+    task.text = nextText.trim();
+  } else {
+    const task = day.daily[id];
+    const nextText = prompt("デイリーを編集", task.text);
+    if (!nextText || !nextText.trim()) return;
+    const choice = prompt("編集範囲を選択\n1 → すべて変更\n2 → 今日以降のみ変更\n3 → キャンセル");
+    if (choice !== "1" && choice !== "2") return;
+
+    appData.masterDaily[id].text = nextText.trim();
+    Object.keys(appData.calendar).forEach((date) => {
+      if (choice === "1" || date >= todayStr) {
+        const d = appData.calendar[date];
+        if (d.daily[id]) d.daily[id].text = nextText.trim();
+      }
+    });
+  }
+  save();
+  renderTasks();
+  renderCalendar();
+}
+
+function deleteTask(id) {
+  ensureDate(selectedDate);
+  const day = appData.calendar[selectedDate];
+
+  if (currentTab === "single") {
+    delete day.single[id];
+    day.singleOrder = day.singleOrder.filter((x) => x !== id);
+  } else {
+    if (selectedDate < todayStr) {
+      alert("過去日のデイリーは削除できません");
+      return;
+    }
+    const choice = prompt("削除方法\n1 → この日だけ削除\n2 → この日以降すべて削除\n3 → キャンセル");
+    if (choice === "1") {
+      delete day.daily[id];
+      day.dailyOrder = day.dailyOrder.filter((x) => x !== id);
+      day.dailyExcluded[id] = true;
+    } else if (choice === "2") {
+      delete appData.masterDaily[id];
+      Object.keys(appData.calendar).forEach((date) => {
+        if (date >= selectedDate) {
+          const d = appData.calendar[date];
+          delete d.daily[id];
+          d.dailyOrder = d.dailyOrder.filter((x) => x !== id);
+          d.dailyExcluded[id] = true;
+        }
+      });
+    } else {
+      return;
+    }
+  }
+
+  save();
+  renderTasks();
+  renderCalendar();
+  updateRate();
+}
+
+function reorderByDoneGroup(day, tab, id) {
+  const orderKey = tab + "Order";
+  const map = day[tab];
+  const original = day[orderKey].filter((x) => !!map[x]);
+  const todo = original.filter((x) => !map[x].done);
+  const done = original.filter((x) => map[x].done);
+  const targetGroup = map[id].done ? done : todo;
+  const idx = targetGroup.indexOf(id);
+  if (idx >= 0) {
+    targetGroup.splice(idx, 1);
+    targetGroup.push(id);
+  }
+  day[orderKey] = [...todo, ...done];
+}
+
+function toggleTask(id) {
+  const day = appData.calendar[selectedDate];
+  const task = day[currentTab][id];
+  task.done = !task.done;
+  reorderByDoneGroup(day, currentTab, id);
+  save();
+  renderTasks();
+  renderCalendar();
+  updateRate();
+}
+
+function renderTasks() {
+  ensureDate(selectedDate);
+  const list = document.getElementById("taskList");
+  list.innerHTML = "";
+  const day = appData.calendar[selectedDate];
+  const map = day[currentTab];
+  const orderKey = currentTab + "Order";
+
+  day[orderKey].filter((id) => map[id]).forEach((id) => {
+    const t = map[id];
+    const div = document.createElement("div");
+    div.className = "task" + (t.done ? " done" : "");
+    div.draggable = true;
+    div.ondragstart = () => { dragId = id; };
+    div.ondragover = (e) => {
+      if (dragId && map[dragId] && map[dragId].done === t.done) e.preventDefault();
+    };
+    div.ondrop = () => {
+      if (!dragId || dragId === id || !map[dragId] || map[dragId].done !== t.done) return;
+      const order = day[orderKey];
+      const from = order.indexOf(dragId);
+      const to = order.indexOf(id);
+      order.splice(from, 1);
+      order.splice(to, 0, dragId);
+      save();
+      renderTasks();
+    };
+    div.innerHTML = `<span>${t.text}</span>
+      <div class="taskActions">
+        <input type="checkbox" ${t.done ? "checked" : ""}>
+        <button class="small">編集</button>
+        <button class="small">削除</button>
+      </div>`;
+    div.querySelector("input").onchange = () => toggleTask(id);
+    div.querySelectorAll("button")[0].onclick = () => editTask(id);
+    div.querySelectorAll("button")[1].onclick = () => deleteTask(id);
+    list.appendChild(div);
+  });
+}
+
+document.getElementById("appTitle").value = appData.appTitle;
+document.getElementById("appTitle").onchange = (e) => {
+  appData.appTitle = e.target.value || "To Do";
+  save();
+};
 
 renderCalendar();
 </script>
